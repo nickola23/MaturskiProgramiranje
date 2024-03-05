@@ -211,9 +211,9 @@ namespace IzlozbaPasa
             Konekcija();
 
             string bekap = "backup" + trenutnoVreme.ToString("dd.MM.yyyy HH.mm.ss");
-            // string bekap = "backup12.11.1975 23.01.";
+
             Text = bekap;
-            // Putanja gde ćete sačuvati bekap fajl
+
             string backupPath = "C:\\Bekap\\" + bekap + ".bak";
 
             komanda.CommandText = @"BACKUP DATABASE Izlozba pasa-osnovno TO DISK = '{backupPath}'";
@@ -226,7 +226,7 @@ namespace IzlozbaPasa
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Greska");
+                MessageBox.Show(ex.Message, "Greska"); 
             }
             finally
             {
