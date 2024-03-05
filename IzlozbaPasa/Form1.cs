@@ -164,5 +164,74 @@ namespace IzlozbaPasa
         {
             ZakasnelaPrijava();
         }
+
+        private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Konekcija();
+            string idizlozbe = comboBox4.Text.Split('-')[0];
+            komanda.CommandText = "SELECT COUNT(*), COUNT(rezultat) FROM rezultat WHERE id_izlozbe = @idIzlozbe";
+            komanda.Parameters.AddWithValue("@idIzlozbe", idizlozbe);
+            BrisiTabelu();
+            da.SelectCommand = komanda;
+            da.Fill(dt);
+            label7.Text = dt.Rows[0][0].ToString();
+            label8.Text = dt.Rows[0][1].ToString();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            Konekcija();
+            string idizlozbe = comboBox4.Text.Split('-')[0];
+            komanda.CommandText = "SELECT k.id_kategorije AS Sifra, k.naziv AS 'Naziv Kategorije', COUNT(r.rezultat) AS 'Broj Pasa' FROM kategorija k JOIN rezultat r ON k.id_kategorije = r.id_kategorije WHERE r.id_izlozbe = @idIzlozbe GROUP BY k.id_kategorije, k.naziv ORDER BY k.id_kategorije";
+            komanda.Parameters.AddWithValue("@idIzlozbe", idizlozbe);
+            da.SelectCommand = komanda;
+            da.Fill(dt);
+            dataGridView1.DataSource = dt;
+
+            chart1.DataSource = dt;
+            chart1.Series["Rezultat"].IsValueShownAsLabel = true;
+            chart1.Series["Rezultat"].Points.Clear();
+            for(int i = 0; i < dt.Rows.Count; i++)
+            {
+                DataRow red = dt.Rows[i];
+                chart1.Series["Rezultat"].Points.AddXY(red[1].ToString(), red[2].ToString());
+            }
+            chart1.Visible = true;
+
+        }
+
+        private void tabPage2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            DateTime trenutnoVreme = DateTime.Now;
+            Konekcija();
+
+            string bekap = "backup" + trenutnoVreme.ToString("dd.MM.yyyy HH.mm.ss");
+            // string bekap = "backup12.11.1975 23.01.";
+            Text = bekap;
+            // Putanja gde ćete sačuvati bekap fajl
+            string backupPath = "C:\\Bekap\\" + bekap + ".bak";
+
+            komanda.CommandText = @"BACKUP DATABASE Izlozba pasa-osnovno TO DISK = '{backupPath}'";
+            try
+            {
+                konekcija.Open();
+                komanda.ExecuteNonQuery();
+                MessageBox.Show("Kreiran bekap");
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Greska");
+            }
+            finally
+            {
+                konekcija.Close();
+            }
+        }
     }
 }
