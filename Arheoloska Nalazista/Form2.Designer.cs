@@ -64,6 +64,7 @@
             this.button1.TabIndex = 2;
             this.button1.Text = "Upamti izmene";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
             // 
@@ -87,11 +88,12 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(344, 78);
+            this.pictureBox1.Location = new System.Drawing.Point(325, 31);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(162, 135);
+            this.pictureBox1.Size = new System.Drawing.Size(252, 205);
             this.pictureBox1.TabIndex = 5;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
             // dataGridView1
             // 

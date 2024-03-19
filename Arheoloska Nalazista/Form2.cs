@@ -23,6 +23,7 @@ namespace Arheoloska_Nalazista
         SqlDataAdapter da;
         DataTable dt;
         private const string NO_IMAGE = "antikviteti\\no_image.jpg";
+        string filename;
         int k = 0;
         void Konekcija()
         {
@@ -52,12 +53,14 @@ namespace Arheoloska_Nalazista
             {
                 pictureBox1.Image = Image.FromFile(NO_IMAGE);
                 pictureBox1.Tag = NO_IMAGE;
+                filename = NO_IMAGE;
             }
             else
             {
                 byte[] slikaBytes = (byte[])dt.Rows[k][2];
                 MemoryStream ms = new MemoryStream(slikaBytes);
                 pictureBox1.Image = Image.FromStream(ms);
+                filename = "";
             }
         }
         public void napred_nazad()
@@ -90,6 +93,52 @@ namespace Arheoloska_Nalazista
         {
             if (k < dt.Rows.Count - 1) k++;
             napred_nazad();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            konekcija.Open();
+            var image = new ImageConverter().ConvertTo(pictureBox1.Image, typeof(Byte[]));
+            if(pictureBox1.Image != null && filename.EndsWith(NO_IMAGE))
+            {
+                komanda.CommandText = "UPDATE tipovi_antikviteta SET tip = @tip, slika = null WHERE tipAntikvitetaId = @tipAntikvitetaId";
+                komanda.Parameters.AddWithValue("@tip", textBox1.Text);
+                komanda.Parameters.AddWithValue("@tipAntikvitetaId", label2.Text);
+            }
+            else
+            {
+                komanda.CommandText = "UPDATE tipovi_antikviteta SET tip = @tip, slika = @slika WHERE tipAntikvitetaId = @tipAntikvitetaId";
+                komanda.Parameters.AddWithValue("@tip", textBox1.Text);
+                komanda.Parameters.AddWithValue("@slika", image);
+                komanda.Parameters.AddWithValue("@tipAntikvitetaId", label2.Text);
+            }
+            try
+            {
+                komanda.ExecuteNonQuery();
+                MessageBox.Show("Podaci izmenjeni u bazi");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Greska");
+            }
+            finally
+            {
+                konekcija.Close();
+            }
+            Form2_Load(sender, e);
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.FileName = "";
+            openFileDialog1.InitialDirectory = Path.Combine(Application.StartupPath, @"antikviteti");
+            openFileDialog1.Filter = "Format slike |*.jpg; *.jpeg; *.png; ";
+            if(openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                filename = openFileDialog1.FileName;
+                pictureBox1.Load(openFileDialog1.FileName);
+            }
         }
     }
 }
