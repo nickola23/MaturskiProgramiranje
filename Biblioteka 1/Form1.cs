@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -27,7 +28,7 @@ namespace Biblioteka_1
             konekcija = new SqlConnection();
             da = new SqlDataAdapter();
             dt = new DataTable();
-            konekcija.ConnectionString = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=\"D:\\nikola.milanovic\\maturski\\Biblioteka 1\\bin\\Debug\\Biblioteka 2.mdf\";Integrated Security=True;Connect Timeout=30";
+            konekcija.ConnectionString = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=|DataDirectory|Biblioteka 2.mdf;Integrated Security=True;Connect Timeout=30";
             komanda.Connection = konekcija;
         }
 
@@ -45,9 +46,9 @@ namespace Biblioteka_1
             listView1.FullRowSelect = true;
 
             numericUpDown2.Maximum = DateTime.Now.Year;
-            numericUpDown2.Value = numericUpDown2.Maximum;
+            numericUpDown2.Value = DateTime.Now.Year;
             numericUpDown1.Maximum = DateTime.Now.Year - 1;
-            numericUpDown2.Value = numericUpDown2.Maximum - 10;
+            numericUpDown1.Value = numericUpDown2.Maximum - 10;
             komanda.CommandText = "SELECT citalacID, maticni_broj, ime, prezime, adresa FROM Citalac";
             da.SelectCommand = komanda;
             da.Fill(dt);
@@ -131,7 +132,108 @@ namespace Biblioteka_1
             {
                 konekcija.Open();
                 komanda.ExecuteNonQuery();
-                MessageBox.Show("Dodato u bazu", "Obavestenje")
+                MessageBox.Show("Dodato u bazu", "Obavestenje");
+            }
+            catch
+            {
+                MessageBox.Show("Greska", "Obavestenje");
+            }
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Analiza();
+        }
+        public void Analiza()
+        {
+            Konekcija();
+            string kombo = comboBox1.Text;
+            string[] niz = kombo.Split('-');
+            int min = Convert.ToInt32(numericUpDown1.Value);
+            int max = Convert.ToInt32(numericUpDown2.Value);
+            komanda.CommandText = 
+                "SELECT ime + ' ' + prezime AS 'ime i prezime', YEAR(datum_uzimanja) " +
+                "AS 'godina', COUNT(datum_uzimanja) AS 'broj iznajmljivanja', (COUNT(*) - COUNT(datum_vracanja)) AS 'nije vraceno' " +
+                "FROM citalac " +
+                "INNER JOIN na_citanju " +
+                "ON citalac.citalacID = na_citanju.citalacID " +
+                "WHERE (YEAR(datum_uzimanja) BETWEEN @min AND @max) " +
+                "AND citalac.citalacID = @id " +
+                "GROUP BY ime + ' ' + prezime, YEAR(datum_uzimanja) ";
+
+
+            komanda.Parameters.AddWithValue("@id", niz[0]);
+            komanda.Parameters.AddWithValue("@min", min);
+            komanda.Parameters.AddWithValue("@max", max);
+            da.SelectCommand = komanda;
+            da.Fill(dt);
+
+            dataGridView1.DataSource = dt;
+
+            try
+            {
+                konekcija.Open();
+                komanda.ExecuteNonQuery();
+            }
+            catch
+            {
+                MessageBox.Show("Greska");
+            }
+            finally
+            {
+                konekcija.Close();
+            }
+
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            if(numericUpDown1.Value < numericUpDown2.Value)
+            {
+                if (comboBox1.Text != string.Empty) Analiza();
+            }
+            else
+            {
+                MessageBox.Show("Greska");
+                numericUpDown2.Value = numericUpDown1.Value + 1;
+                return;
+            }
+        }
+
+        private void numericUpDown2_ValueChanged(object sender, EventArgs e)
+        {
+            if (numericUpDown1.Value < numericUpDown2.Value)
+            {
+                if (comboBox1.Text != string.Empty) Analiza();
+            }
+            else
+            {
+                MessageBox.Show("Greska");
+                numericUpDown2.Value = numericUpDown1.Value + 1;
+                return;
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            chart1.Series["Nije vraceno"].IsValueShownAsLabel = true;
+            chart1.Series["Nije vraceno"].Points.Clear();
+
+            ArrayList godina = new ArrayList();
+            ArrayList iznajmljen = new ArrayList();
+            ArrayList nije = new ArrayList();
+
+            for(int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                godina.Add(dataGridView1.Rows[i].Cells[1].Value);
+                iznajmljen.Add(dataGridView1.Rows[i].Cells[2].Value);
+                nije.Add(dataGridView1.Rows[i].Cells[3].Value);
+                chart1.Series["Uzeto"].Points.AddXY(godina[i], iznajmljen[i]);
+                chart1.Series["Nije vraceno"].Points.AddXY(godina[i], nije[i]);
             }
         }
     }
